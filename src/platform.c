@@ -29,6 +29,10 @@
 
 #include "internal.h"
 
+// These construct a string literal from individual numeric constants
+#define _GLFW_CONCAT_VERSION(m, n, r) #m "." #n "." #r
+#define _GLFW_MAKE_VERSION(m, n, r) _GLFW_CONCAT_VERSION(m, n, r)
+
 //////////////////////////////////////////////////////////////////////////
 //////                       GLFW internal API                      //////
 //////////////////////////////////////////////////////////////////////////
@@ -72,6 +76,11 @@ GLFWbool _glfwSelectPlatform(int desiredID, _GLFWplatform* platform)
     // Only allow the Null platform if specifically requested
     if (desiredID == GLFW_PLATFORM_NULL)
         return _glfwConnectNull(desiredID, platform);
+    else if (count == 0)
+    {
+        _glfwInputError(GLFW_PLATFORM_UNAVAILABLE, "This binary only supports the Null platform");
+        return GLFW_FALSE;
+    }
 
     if (desiredID == GLFW_ANY_PLATFORM)
     {
@@ -86,10 +95,7 @@ GLFWbool _glfwSelectPlatform(int desiredID, _GLFWplatform* platform)
                 return GLFW_TRUE;
         }
 
-        if (count)
-            _glfwInputError(GLFW_PLATFORM_UNAVAILABLE, "Failed to detect any supported platform");
-        else
-            _glfwInputError(GLFW_PLATFORM_UNAVAILABLE, "This binary only supports the Null platform");
+        _glfwInputError(GLFW_PLATFORM_UNAVAILABLE, "Failed to detect any supported platform");
     }
     else
     {
@@ -144,7 +150,9 @@ GLFWAPI int glfwPlatformSupported(int platformID)
 
 GLFWAPI const char* glfwGetVersionString(void)
 {
-    return _GLFW_VERSION_NUMBER
+    return _GLFW_MAKE_VERSION(GLFW_VERSION_MAJOR,
+                              GLFW_VERSION_MINOR,
+                              GLFW_VERSION_REVISION)
 #if defined(_GLFW_WIN32)
         " Win32 WGL"
 #endif
